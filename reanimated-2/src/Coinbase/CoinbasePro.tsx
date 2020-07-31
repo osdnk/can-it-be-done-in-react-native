@@ -56,17 +56,6 @@ const Coinbase = () => {
       </View>
       <View>
         <Chart />
-        <PanGestureHandler minDist={0} {...{ onGestureEvent }}>
-          <Animated.View style={StyleSheet.absoluteFill}>
-            <Animated.View style={[StyleSheet.absoluteFill, horizontal]}>
-              <Line x={SIZE} y={0} />
-            </Animated.View>
-            <Animated.View style={[StyleSheet.absoluteFill, vertical]}>
-              <Line x={0} y={SIZE} />
-            </Animated.View>
-            <Label {...{ translateY, opacity }} />
-          </Animated.View>
-        </PanGestureHandler>
       </View>
       <Content />
     </View>

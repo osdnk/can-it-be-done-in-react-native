@@ -11,7 +11,7 @@ import Coinbase from "./Coinbase";
 
 const Stack = createStackNavigator<Routes>();
 const AppNavigator = () => (
-  <Stack.Navigator>
+  <Stack.Navigator initialRouteName="Chart">
     <Stack.Screen
       name="Examples"
       component={Examples}
