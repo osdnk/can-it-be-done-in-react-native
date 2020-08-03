@@ -5,6 +5,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withTiming,
 } from "react-native-reanimated";
 
 import { SIZE } from "./ChartHelpers";
@@ -135,11 +136,6 @@ class MonotonicCubicSpline {
   }
 }
 
-const data = [
-  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-  [1, 2, 3, 4, 5, 6, 7, 8, 9, 0],
-];
-
 //const sp = new MonotonicCubicSpline(data[0], data[1]);
 //console.warn(sp.interpolate(1.5));
 
@@ -165,7 +161,7 @@ const parse = (data) => {
   }));
 };
 
-const dataParsed = parse(data1.slice(0, 150));
+const dataParsed = parse(data1);
 const dataParsed2 = parse(data2.slice(0, 150));
 
 function simplifyData(data) {
@@ -200,14 +196,49 @@ function Chart() {
   useEffect(() => {
     sharedPoints.value = softData;
     nextSharedPoints.value = softData;
-  }, [sharedPoints]);
+  }, [nextSharedPoints, sharedPoints]);
   const path = useDerivedValue(() => {
-    return sharedPoints.value
-      .map(({ x, y }, i) => {
-        const { x: nX, y: nY } = nextSharedPoints.value[i];
-        const mX = x + (nX - x) * progress.value;
-        const mY = y + (nY - y) * progress.value;
-        return `L ${mX} ${mY}`;
+    let fromValue = sharedPoints.value;
+    let toValue = nextSharedPoints.value;
+    if (progress.value !== 1) {
+      const numOfPoints = Math.round(
+        fromValue.length +
+          (toValue.length - fromValue.length) *
+            Math.min(progress.value, 0.5) *
+            2
+      );
+      if (fromValue.length !== numOfPoints) {
+        const mappedFrom = [];
+        const coef = (fromValue.length - 1) / (numOfPoints - 1);
+        for (let i = 0; i < numOfPoints; i++) {
+          mappedFrom.push(fromValue[Math.round(i * coef)]);
+        }
+        fromValue = mappedFrom;
+      }
+
+      if (toValue.length !== numOfPoints) {
+        const mappedTo = [];
+        const coef = (toValue.length - 1) / (numOfPoints - 1);
+
+        for (let i = 0; i < numOfPoints; i++) {
+          mappedTo.push(toValue[Math.round(i * coef)]);
+        }
+        toValue = mappedTo;
+      }
+      return fromValue
+        .map(({ x, y }, i) => {
+          const { x: nX, y: nY } = toValue[i];
+          const mX = x + (nX - x) * progress.value;
+          const mY = y + (nY - y) * progress.value;
+          return `L ${mX} ${mY}`;
+        })
+        .join(" ")
+        .replace("L", "M");
+    }
+
+    return toValue
+      .map(({ x, y }) => {
+        return `L ${x} ${y}`;
       })
       .join(" ")
       .replace("L", "M");
@@ -255,7 +286,7 @@ function Chart() {
           sharedPoints.value = nextSharedPoints.value;
           nextSharedPoints.value = dataParsed2;
           progress.value = 0;
-          progress.value = withSpring(1);
+          progress.value = withTiming(1);
         }}
       >
         <Text style={{ color: "white" }}>Data 2</Text>
