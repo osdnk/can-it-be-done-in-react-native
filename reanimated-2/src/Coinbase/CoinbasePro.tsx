@@ -49,15 +49,8 @@ const Coinbase = () => {
   return (
     <View style={styles.container}>
       <View>
-        <Header />
-        <View pointerEvents="none">
-          <Values {...{ translateX }} />
-        </View>
-      </View>
-      <View>
         <Chart />
       </View>
-      <Content />
     </View>
   );
 };
